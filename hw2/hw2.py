@@ -20,15 +20,41 @@ def hw2_1(args):
     def to_screen(p):
         # HW2.1: implement this
         # access "s" using args.s
-        return (0.0, 0.0)
+        
+        # Project the 3D point onto the image plane.
+        x_projected = p[0] / (-p[2])
+        y_projected = p[1] / (-p[2])
+
+        # Convert projected coordinates to screen pixels.
+        screen_x = (x_projected + args.s * a) / (2 * args.s * a) * img.width
+        screen_y = (args.s - y_projected) / (2 * args.s) * img.height
+
+        return (screen_x, screen_y)
 
     sp0 = to_screen(args.p0)
     sp1 = to_screen(args.p1)
     sp2 = to_screen(args.p2)
 
     # HW2.1: implement this
-    aabb_min = (0, 0)
-    aabb_max = (10, 10)
+    
+    # Find the minimum and maximum screen coordinates.
+    min_x = min(sp0[0], sp1[0], sp2[0])
+    min_y = min(sp0[1], sp1[1], sp2[1])
+
+    max_x = max(sp0[0], sp1[0], sp2[0])
+    max_y = max(sp0[1], sp1[1], sp2[1])
+
+    # Round outward and restrict the box to the image.
+    aabb_min = (
+        max(0, math.floor(min_x)),
+        max(0, math.floor(min_y))
+    )
+
+    aabb_max = (
+        min(img.width - 1, math.ceil(max_x)),
+        min(img.height - 1, math.ceil(max_y))
+    )
+
 
     vars = {'sp0': sp0,
             'sp1': sp1,
