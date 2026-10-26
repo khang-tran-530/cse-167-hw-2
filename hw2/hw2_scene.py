@@ -180,17 +180,105 @@ def parse_triangle_mesh(filename: str) -> TriangleMesh:
         transform_keyframes=[],
         material={})
 
+# HW 2.3 TODO: your code here
 def compose_transformations(transformations):
     """
-        Given a list of transformations, compose them into a matrix.
+    Given a list of transformations, compose them into a matrix.
     """
     F = np.eye(4, dtype=np.float32)
 
     for transform in transformations:
-        pass
-        # HW 2.3 TODO: your code here
+
+        if "scale" in transform:
+            sx, sy, sz = transform["scale"]
+
+            M = np.eye(4, dtype=np.float32)
+            M[0, 0] = sx
+            M[1, 1] = sy
+            M[2, 2] = sz
+
+        elif "translate" in transform:
+            tx, ty, tz = transform["translate"]
+
+            M = np.eye(4, dtype=np.float32)
+            M[0, 3] = tx
+            M[1, 3] = ty
+            M[2, 3] = tz
+
+        elif "rotate_x" in transform:
+            theta = math.radians(transform["rotate_x"][0])
+            c = math.cos(theta)
+            s = math.sin(theta)
+
+            M = np.array([
+                [1, 0, 0, 0],
+                [0, c, -s, 0],
+                [0, s, c, 0],
+                [0, 0, 0, 1]
+            ], dtype=np.float32)
+
+        elif "rotate_y" in transform:
+            theta = math.radians(transform["rotate_y"][0])
+            c = math.cos(theta)
+            s = math.sin(theta)
+
+            M = np.array([
+                [c, 0, s, 0],
+                [0, 1, 0, 0],
+                [-s, 0, c, 0],
+                [0, 0, 0, 1]
+            ], dtype=np.float32)
+
+        elif "rotate_z" in transform:
+            theta = math.radians(transform["rotate_z"][0])
+            c = math.cos(theta)
+            s = math.sin(theta)
+
+            M = np.array([
+                [c, -s, 0, 0],
+                [s, c, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]
+            ], dtype=np.float32)
+
+        elif "lookat" in transform:
+            params = transform["lookat"]
+
+            position = np.array(
+                params["position"], dtype=np.float32
+            )
+            target = np.array(
+                params["target"], dtype=np.float32
+            )
+            up = np.array(
+                params["up"], dtype=np.float32
+            )
+
+            # Camera forward direction.
+            d = target - position
+            d = d / np.linalg.norm(d)
+
+            # Camera right direction.
+            r = np.cross(d, up)
+            r = r / np.linalg.norm(r)
+
+            # Corrected camera up direction.
+            u = np.cross(r, d)
+
+            M = np.eye(4, dtype=np.float32)
+            M[:3, 0] = r
+            M[:3, 1] = u
+            M[:3, 2] = -d
+            M[:3, 3] = position
+
+        else:
+            raise ValueError(f"Unknown transformation: {transform}")
+
+        # Apply transformations in their listed order.
+        F = M @ F
 
     return F
+
 
 def parse_scene(filename : str) -> Scene:
     scene_dir = os.path.dirname(filename)
